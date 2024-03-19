@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../model/Annonce.dart';
+import '../widgets/MonWidgetImage.dart';
 import 'annonce.detail_screen.dart';
 
 class ListeScreen extends StatefulWidget {
@@ -50,13 +51,32 @@ class _ListeScreenState extends State<ListeScreen> {
 
   Future<List<Annonce>> fetchAnnonces() async {
     final prefs = await SharedPreferences.getInstance();
-    final maxDistance = prefs.getDouble('annonceDistance') ?? 100; // Default à 100 km
-
-    final response = await http.get(Uri.parse('${Config.API_URL}/api/v1/annonces/with-objects'));
+    final maxDistance = prefs.getDouble('annonceDistance') ?? 100;
+    final userId = prefs.getInt('userId');
     final position = await _determinePosition();
+    final token = prefs.getString('jwtToken');
+    http.Response response;
+
+    if (token == null) {
+       response = await http.get(
+        Uri.parse('${Config.API_URL}/api/v1/annonces'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      );
+    } else {
+        response = await http.get(
+        Uri.parse('${Config.API_URL}/api/v1/annonces/with-objects?userId=$userId'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+    }
 
     if (response.statusCode == 200) {
       List jsonResponse = json.decode(response.body);
+      print(jsonResponse);
       return jsonResponse.map((annonce) {
         final annonceObj = Annonce.fromJson(annonce);
         annonceObj.calculateDistance(userLat: position.latitude, userLon: position.longitude);
@@ -110,17 +130,7 @@ class _ListeScreenState extends State<ListeScreen> {
                             subtitle: Text('${annonce.km.toStringAsFixed(1)} km'),
                           ),
                         ),
-                        Container(
-                          height: 100,
-                          width: 100,
-                          decoration: BoxDecoration(
-                            borderRadius: const BorderRadius.all(Radius.circular(8.0)),
-                            image: DecorationImage(
-                              fit: BoxFit.cover,
-                              image: NetworkImage(annonce.imageUrl),
-                            ),
-                          ),
-                        ),
+                        MonWidgetImage(annonce: annonce),
                       ],
                     ),
                   ),

@@ -60,7 +60,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
       });
 
       final response = await http.post(
-        Uri.parse('http://localhost:3000/api/v1/messages'),
+        Uri.parse('${Config.API_URL}/api/v1/messages'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',

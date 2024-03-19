@@ -1,4 +1,5 @@
 import 'package:client/views/loginpage_screen.dart';
+import 'package:client/views/pages/add_annonce_screen.dart';
 import 'package:client/views/register_screen.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
@@ -7,9 +8,11 @@ import 'views/liste_screen.dart';
 import 'views/message_screen.dart';
 import 'views/recherche_screen.dart';
 
-void main() => runApp(MyApp());
+void main() => runApp(const MyApp());
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -35,6 +38,7 @@ class _MyHomePageState extends State<MyHomePage> {
   final List<Widget> _children = [
     ListeScreen(),
     RechercherScreen(),
+    AddAnnonceScreen(),
     MessageScreen(),
     CompteScreen(),
   ];
@@ -54,6 +58,7 @@ class _MyHomePageState extends State<MyHomePage> {
         items: const <Widget>[
           Icon(Icons.list, size: 30),
           Icon(Icons.search, size: 30),
+          Icon(Icons.add, size: 30),
           Icon(Icons.message, size: 30),
           Icon(Icons.account_circle, size: 30),
         ],

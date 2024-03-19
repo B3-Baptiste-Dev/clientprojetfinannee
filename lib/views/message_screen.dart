@@ -37,6 +37,8 @@ class _MessageScreenState extends State<MessageScreen> {
   Future<void> fetchMessages() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('jwtToken');
+    print('Token: $token');
+
     if (token != null) {
       final response = await http.get(
         Uri.parse('${Config.API_URL}/api/v1/messages/received'),
