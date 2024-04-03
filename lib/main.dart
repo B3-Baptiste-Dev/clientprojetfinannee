@@ -1,4 +1,5 @@
 import 'package:client/views/loginpage_screen.dart';
+import 'package:client/views/pages/MyAnnonces.dart';
 import 'package:client/views/pages/add_annonce_screen.dart';
 import 'package:client/views/register_screen.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
@@ -22,6 +23,7 @@ class MyApp extends StatelessWidget {
         '/': (context) => MyHomePage(),
         '/login': (context) => LoginPage(),
         '/register': (context) => RegisterPage(),
+        '/myannonces': (context) => MyAnnoncesPage(),
       },
     );
   }

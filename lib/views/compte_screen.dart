@@ -74,6 +74,10 @@ class _CompteScreenState extends State<CompteScreen> {
                 child: const Text('Se déconnecter'),
               ),
               ElevatedButton(
+                  onPressed : () => Navigator.pushNamed(context, '/myannonces'),
+                  child: const Text('Mes annonces')
+              ),
+              ElevatedButton(
                 onPressed: () {
                   Navigator.push(
                     context,

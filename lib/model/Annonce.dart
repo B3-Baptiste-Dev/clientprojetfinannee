@@ -5,8 +5,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:geolocator/geolocator.dart';
 
 class Annonce {
+  final int id;
   final String imageUrl;
   final String title;
+  final String description;
   double km;
   final double latitude;
   final double longitude;
@@ -14,8 +16,10 @@ class Annonce {
   Uint8List? imageData;
 
   Annonce({
+    required this.id,
     required this.imageUrl,
     required this.title,
+    required this.description,
     this.km = 0.0,
     required this.latitude,
     required this.longitude,
@@ -34,9 +38,11 @@ class Annonce {
     }
 
     return Annonce(
+      id: object['id'] as int? ?? -1,
       imageUrl: imageUrl,
       imageData: imageData,
       title: object['title'] as String? ?? 'Titre inconnu',
+      description: object['description'] as String? ?? 'Description inconnue',
       latitude: json['latitude']?.toDouble() ?? 0.0,
       longitude: json['longitude']?.toDouble() ?? 0.0,
       ownerId: object['ownerId'] as int? ?? -1,
@@ -44,14 +50,21 @@ class Annonce {
   }
 
   ImageProvider<Object> getImageProvider() {
-    if (imageUrl.startsWith('data:image')) {
+    if (imageUrl.startsWith('data:application/octet-stream;base64,')) {
+      final correctImageUrl = imageUrl.replaceFirst('application/octet-stream', 'image/jpeg');
+      final Uint8List bytes = base64Decode(correctImageUrl.split(',')[1]);
+      return MemoryImage(bytes);
+    } else if (imageUrl.startsWith('data:image')) {
       final String base64String = imageUrl.split(',')[1];
       final Uint8List bytes = base64Decode(base64String);
       return MemoryImage(bytes);
-    } else {
+    } else if (imageUrl.startsWith('http')) {
       return NetworkImage(imageUrl);
+    } else {
+      return AssetImage('assets/images/default_image.png');
     }
   }
+
 
   void calculateDistance({required double userLat, required double userLon}) {
     final double distance = Geolocator.distanceBetween(userLat, userLon, this.latitude, this.longitude);

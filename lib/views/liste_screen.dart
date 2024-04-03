@@ -48,7 +48,6 @@ class _ListeScreenState extends State<ListeScreen> {
     return await Geolocator.getCurrentPosition();
   }
 
-
   Future<List<Annonce>> fetchAnnonces() async {
     final prefs = await SharedPreferences.getInstance();
     final maxDistance = prefs.getDouble('annonceDistance') ?? 100;
@@ -58,15 +57,16 @@ class _ListeScreenState extends State<ListeScreen> {
     http.Response response;
 
     if (token == null) {
-       response = await http.get(
+      response = await http.get(
         Uri.parse('${Config.API_URL}/api/v1/annonces'),
         headers: {
           'Content-Type': 'application/json',
         },
       );
     } else {
-        response = await http.get(
-        Uri.parse('${Config.API_URL}/api/v1/annonces/with-objects?userId=$userId'),
+      response = await http.get(
+        Uri.parse(
+            '${Config.API_URL}/api/v1/annonces/with-objects?userId=$userId'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -76,10 +76,10 @@ class _ListeScreenState extends State<ListeScreen> {
 
     if (response.statusCode == 200) {
       List jsonResponse = json.decode(response.body);
-      print(jsonResponse);
       return jsonResponse.map((annonce) {
         final annonceObj = Annonce.fromJson(annonce);
-        annonceObj.calculateDistance(userLat: position.latitude, userLon: position.longitude);
+        annonceObj.calculateDistance(
+            userLat: position.latitude, userLon: position.longitude);
         return annonceObj;
       }).where((annonce) {
         return annonce.km <= maxDistance;
@@ -88,8 +88,6 @@ class _ListeScreenState extends State<ListeScreen> {
       throw Exception('Échec du chargement des annonces');
     }
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -117,20 +115,41 @@ class _ListeScreenState extends State<ListeScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => AnnonceDetailPage(annonce: annonces[index]),
+                        builder: (context) =>
+                            AnnonceDetailPage(annonce: annonces[index]),
                       ),
                     );
                   },
                   child: Card(
-                    child: Row(
+                    margin: EdgeInsets.all(
+                        8.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment
+                          .start,
                       children: [
-                        Expanded(
-                          child: ListTile(
-                            title: Text(annonce.title),
-                            subtitle: Text('${annonce.km.toStringAsFixed(1)} km'),
+                        ClipRRect(
+                          borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(
+                                  8.0)),
+                          child: AspectRatio(
+                            aspectRatio: 16 / 9,
+                            child: Image(
+                              image: annonce.getImageProvider(),
+                              fit: BoxFit.cover,
+                            ),
                           ),
                         ),
-                        MonWidgetImage(annonce: annonce),
+                        Padding(
+                          padding:
+                              const EdgeInsets.all(8.0),
+                          child: Text(
+                            annonce.title,
+                            style: const TextStyle(
+                              fontSize: 20.0,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),

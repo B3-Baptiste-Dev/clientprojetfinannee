@@ -1,9 +1,9 @@
-import 'package:client/config.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../model/MessageModel.dart';
+import '../config.dart';
 
 class ConversationScreen extends StatefulWidget {
   final int otherUserId;
@@ -11,12 +11,13 @@ class ConversationScreen extends StatefulWidget {
   const ConversationScreen({Key? key, required this.otherUserId}) : super(key: key);
 
   @override
-  _ConversationScreenState createState() => _ConversationScreenState();
+  State<ConversationScreen> createState() => _ConversationScreenState();
 }
 
 class _ConversationScreenState extends State<ConversationScreen> {
   List<Message> messages = [];
   final TextEditingController _messageController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -42,7 +43,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
           messages = messagesJson.map((json) => Message.fromJson(json)).toList();
         });
       } else {
-        print('Erreur lors de la récupération de la conversation: ${response.body}');
+        print('Error fetching conversation: ${response.body}');
       }
     }
   }
@@ -50,13 +51,13 @@ class _ConversationScreenState extends State<ConversationScreen> {
   Future<void> sendMessage() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('jwtToken');
-    final userId = prefs.getInt('userId'); // Assurez-vous que vous enregistrez l'userId lors de la connexion
+    final userId = prefs.getInt('userId');
 
     if (token != null && userId != null && _messageController.text.isNotEmpty) {
       final messageData = jsonEncode({
         "content": _messageController.text,
-        "sentById": userId, // Utilisez votre ID d'utilisateur enregistré ou récupéré lors de la connexion
-        "receivedById": widget.otherUserId, // L'ID de l'utilisateur destinataire
+        "sentById": userId,
+        "receivedById": widget.otherUserId,
       });
 
       final response = await http.post(
@@ -68,68 +69,88 @@ class _ConversationScreenState extends State<ConversationScreen> {
         body: messageData,
       );
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        print('Message envoyé avec succès');
+      if (response.statusCode == 201) {
+        print('Message sent successfully');
         _messageController.clear();
-        fetchConversation(); // Rafraîchir la liste des messages
+        fetchConversation();
+        // Scroll to bottom to show new message
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
       } else {
-        print('Erreur lors de l\'envoi du message: ${response.body}');
+        print('Error sending message: ${response.body}');
       }
     } else {
-      print("Veuillez vous assurer que tous les champs sont correctement remplis.");
+      print("Please make sure all fields are correctly filled.");
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Conversation'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: fetchConversation,
+          ),
+        ],
       ),
       body: Column(
         children: [
           Expanded(
             child: ListView.builder(
+              controller: _scrollController,
               itemCount: messages.length,
               itemBuilder: (context, index) {
                 final isMe = messages[index].sentById != widget.otherUserId;
                 return Align(
                   alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-                  child: Container(
-                    padding: EdgeInsets.all(8.0),
-                    margin: EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
-                    decoration: BoxDecoration(
-                      color: isMe ? Colors.blue : Colors.grey[300],
+                  child: Card(
+                    color: isMe ? Colors.blue : Colors.grey[300],
+                    shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12.0),
                     ),
-                    child: Text(
-                      messages[index].content,
-                      style: TextStyle(color: isMe ? Colors.white : Colors.black),
+                    margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+                    child: Padding(
+                      padding: const EdgeInsets.all(10.0),
+                      child: Text(
+                        messages[index].content,
+                        style: TextStyle(color: isMe ? Colors.white : Colors.black),
+                      ),
                     ),
                   ),
                 );
               },
             ),
           ),
+          Divider(height: 1),
           Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.only(left: 8.0, right: 8.0, bottom: 40.0),
             child: Row(
               children: [
                 Expanded(
                   child: TextField(
                     controller: _messageController,
                     decoration: InputDecoration(
-                      hintText: "Type a message",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20.0),
-                      ),
+                      hintText: "Type a message...",
+                      border: InputBorder.none,
+                      filled: true,
+                      fillColor: Colors.grey[200],
+                      contentPadding: const EdgeInsets.all(10.0),
                     ),
                   ),
                 ),
-                IconButton(
-                  icon: Icon(Icons.send),
-                  onPressed: sendMessage,
+                const SizedBox(width: 8),
+                CircleAvatar(
+                  backgroundColor: Theme.of(context).colorScheme.secondary,
+                  child: IconButton(
+                    icon: const Icon(Icons.send, color: Colors.white),
+                    onPressed: sendMessage,
+                  ),
                 ),
               ],
             ),
@@ -142,6 +163,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
   @override
   void dispose() {
     _messageController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 }

@@ -15,12 +15,8 @@ class AnnonceDetailPage extends StatelessWidget {
     final token = prefs.getString('jwtToken');
     final userId = prefs.getInt('userId');
 
-    print("Token: $token");
-    print("UserId: $userId");
-    print("OwnerId: ${annonce.ownerId}");
 
     if (token == null) {
-      print("Token est null, utilisateur non connecté.");
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Vous devez être connecté pour envoyer un message.')),
       );
@@ -28,7 +24,6 @@ class AnnonceDetailPage extends StatelessWidget {
     }
 
     if (annonce.ownerId == null || annonce.ownerId <= 0) {
-      print("OwnerId invalide: ${annonce.ownerId}");
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Erreur interne, impossible d\'envoyer le message.')),
       );
@@ -59,8 +54,6 @@ class AnnonceDetailPage extends StatelessWidget {
                   'receivedById': annonce.ownerId,
                 });
 
-                print("Message Data: $messageData");
-
                 final response = await http.post(
                   Uri.parse('${Config.API_URL}/api/v1/messages'),
                   headers: {
@@ -69,9 +62,6 @@ class AnnonceDetailPage extends StatelessWidget {
                   },
                   body: messageData,
                 );
-
-                print("Response Status Code: ${response.statusCode}");
-                print("Response Body: ${response.body}");
 
                 if (response.statusCode == 200 || response.statusCode == 201) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -94,6 +84,24 @@ class AnnonceDetailPage extends StatelessWidget {
     );
   }
 
+  Widget _buildImage(String imageUrl) {
+    try {
+      if (imageUrl.startsWith('data:image') && imageUrl.contains('base64,')) {
+        final base64String = imageUrl.split('base64,')[1];
+        final decodedBytes = base64Decode(base64String);
+        return Image.memory(decodedBytes, fit: BoxFit.cover);
+      } else {
+        return Image.network(imageUrl, fit: BoxFit.cover);
+      }
+    } catch (e) {
+      print("Erreur de décodage base64 : $e");
+      // Fallback pour l'erreur de décodage
+      return const Icon(Icons.error); // Ou toute autre widget pour indiquer l'erreur
+    }
+  }
+
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -105,7 +113,10 @@ class AnnonceDetailPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Image.network(annonce.imageUrl),
+            Image(
+              image: annonce.getImageProvider(),
+              fit: BoxFit.cover,
+            ),
             const SizedBox(height: 8),
             Text(
               annonce.title,
