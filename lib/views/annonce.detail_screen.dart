@@ -67,12 +67,12 @@ class AnnonceDetailPage extends StatelessWidget {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Message envoyé avec succès.')),
                   );
-                  Navigator.of(context).pop(); // Fermez la boîte de dialogue après le succès
+                  Navigator.of(context).pop();
                 } else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('Échec de l\'envoi du message : ${response.body}')),
                 );
-                Navigator.of(context).pop(); // Fermez la boîte de dialogue également en cas d'échec
+                Navigator.of(context).pop();
               }
 
             }
@@ -95,8 +95,7 @@ class AnnonceDetailPage extends StatelessWidget {
       }
     } catch (e) {
       print("Erreur de décodage base64 : $e");
-      // Fallback pour l'erreur de décodage
-      return const Icon(Icons.error); // Ou toute autre widget pour indiquer l'erreur
+      return const Icon(Icons.error);
     }
   }
 

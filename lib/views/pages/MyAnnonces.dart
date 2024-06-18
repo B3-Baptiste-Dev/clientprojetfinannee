@@ -67,7 +67,7 @@ class _MyAnnoncesPageState extends State<MyAnnoncesPage> {
         SnackBar(content: Text('Annonce supprimée')),
       );
       setState(() {
-        futureAnnonces = fetchMyAnnonces(); // Recharger les annonces
+        futureAnnonces = fetchMyAnnonces();
       });
     } else {
       throw Exception('Échec de la suppression de l\'annonce: ${response.statusCode}');
@@ -123,7 +123,7 @@ class _MyAnnoncesPageState extends State<MyAnnoncesPage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Logique pour naviguer vers la page de création d'une nouvelle annonce
+          // TODO Logique pour naviguer vers la page de création d'une nouvelle annonce
         },
         child: Icon(Icons.add),
       ),

@@ -5,7 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geolocator/geolocator.dart';
-import '../../config.dart'; // Assurez-vous que ce fichier contient la bonne configuration de l'URL de l'API
+import '../../config.dart';
 
 class AddAnnonceScreen extends StatefulWidget {
   @override

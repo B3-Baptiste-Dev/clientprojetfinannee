@@ -73,7 +73,6 @@ class _ConversationScreenState extends State<ConversationScreen> {
         print('Message sent successfully');
         _messageController.clear();
         fetchConversation();
-        // Scroll to bottom to show new message
         _scrollController.animateTo(
           _scrollController.position.maxScrollExtent,
           duration: Duration(milliseconds: 300),

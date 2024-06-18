@@ -59,7 +59,7 @@ class _EditAnnoncePageState extends State<EditAnnoncePage> {
       );
 
       if (response.statusCode == 200) {
-        Navigator.pop(context); // Retour à la page précédente
+        Navigator.pop(context);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Échec de la mise à jour de l\'annonce : ${response.body}')),

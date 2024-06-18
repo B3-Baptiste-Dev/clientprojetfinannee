@@ -24,7 +24,9 @@ class MyApp extends StatelessWidget {
         '/login': (context) => LoginPage(),
         '/register': (context) => RegisterPage(),
         '/myannonces': (context) => MyAnnoncesPage(),
+        '/compte': (context) => CompteScreen(),
       },
+      debugShowCheckedModeBanner: false,
     );
   }
 }
