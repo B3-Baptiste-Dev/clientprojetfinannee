@@ -12,12 +12,14 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  bool _isLoading = false;
 
   Future<void> _login() async {
-    print('Tentative de connexion avec email: ${_emailController.text}');
+    setState(() {
+      _isLoading = true;
+    });
 
     try {
-      print('Envoi de la requête de connexion...');
       final response = await http.post(
         Uri.parse('${Config.API_URL}/api/v1/auth/login'),
         headers: {'Content-Type': 'application/json'},
@@ -27,31 +29,26 @@ class _LoginPageState extends State<LoginPage> {
         }),
       );
 
-      print('Status code: ${response.statusCode}');
-      print('Response body: ${response.body}');
-
       if (response.statusCode == 200) {
-        print('Connexion réussie');
         final data = json.decode(response.body);
         final String token = data['access_token'];
         final int userId = data['user_id'];
-
-        print('Token JWT reçu: $token');
-        print('UserID reçu: $userId');
 
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('jwtToken', token);
         await prefs.setInt('userId', userId);
 
         Navigator.of(context).popUntil((route) => route.isFirst);
-        Navigator.pushReplacementNamed(context, '/compte');
+        Navigator.pushReplacementNamed(context, '/');
       } else {
-        print('Échec de la connexion avec le code ${response.statusCode}');
         _showErrorDialog('Échec de la connexion. Veuillez réessayer.');
       }
     } catch (e) {
-      print('Exception lors de la connexion: $e');
       _showErrorDialog('Une erreur est survenue. Veuillez réessayer.');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -78,6 +75,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text('Connexion'),
         leading: IconButton(
@@ -86,25 +84,72 @@ class _LoginPageState extends State<LoginPage> {
             Navigator.of(context).pop();
           },
         ),
+        backgroundColor: Colors.blueAccent,
       ),
-      body: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          children: <Widget>[
-            TextField(
-              controller: _emailController,
-              decoration: InputDecoration(labelText: 'Email'),
-            ),
-            TextField(
-              controller: _passwordController,
-              decoration: InputDecoration(labelText: 'Mot de passe'),
-              obscureText: true,
-            ),
-            ElevatedButton(
-              onPressed: _login,
-              child: Text('Connexion'),
-            ),
-          ],
+      body: Center(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Text(
+                'Bienvenue',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 20),
+              TextField(
+                controller: _emailController,
+                decoration: InputDecoration(
+                  labelText: 'Email',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                  prefixIcon: Icon(Icons.email),
+                ),
+                keyboardType: TextInputType.emailAddress,
+              ),
+              SizedBox(height: 20),
+              TextField(
+                controller: _passwordController,
+                decoration: InputDecoration(
+                  labelText: 'Mot de passe',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                  prefixIcon: Icon(Icons.lock),
+                ),
+                obscureText: true,
+              ),
+              SizedBox(height: 20),
+              _isLoading
+                  ? CircularProgressIndicator()
+                  : ElevatedButton(
+                onPressed: _login,
+                child: Text('Connexion'),
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.white, backgroundColor: Colors.blueAccent,
+                  padding: EdgeInsets.symmetric(
+                      horizontal: 30, vertical: 15),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                ),
+              ),
+              SizedBox(height: 20),
+              TextButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/register');
+                },
+                child: Text(
+                  'Créer un compte',
+                  style: TextStyle(color: Colors.blueAccent),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

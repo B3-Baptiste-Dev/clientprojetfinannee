@@ -1,6 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../model/MessageModel.dart';
 import '../config.dart';
@@ -91,6 +91,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Conversation'),
+        backgroundColor: Colors.blueAccent,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -106,19 +107,21 @@ class _ConversationScreenState extends State<ConversationScreen> {
               itemCount: messages.length,
               itemBuilder: (context, index) {
                 final isMe = messages[index].sentById != widget.otherUserId;
-                return Align(
-                  alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-                  child: Card(
-                    color: isMe ? Colors.blue : Colors.grey[300],
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12.0),
-                    ),
-                    margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
-                    child: Padding(
-                      padding: const EdgeInsets.all(10.0),
-                      child: Text(
-                        messages[index].content,
-                        style: TextStyle(color: isMe ? Colors.white : Colors.black),
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                  child: Align(
+                    alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: isMe ? Colors.blueAccent : Colors.grey[300],
+                        borderRadius: BorderRadius.circular(12.0),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(10.0),
+                        child: Text(
+                          messages[index].content,
+                          style: TextStyle(color: isMe ? Colors.white : Colors.black),
+                        ),
                       ),
                     ),
                   ),
@@ -128,7 +131,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
           ),
           Divider(height: 1),
           Padding(
-            padding: const EdgeInsets.only(left: 8.0, right: 8.0, bottom: 40.0),
+            padding: const EdgeInsets.all(8.0),
             child: Row(
               children: [
                 Expanded(
@@ -136,7 +139,9 @@ class _ConversationScreenState extends State<ConversationScreen> {
                     controller: _messageController,
                     decoration: InputDecoration(
                       hintText: "Type a message...",
-                      border: InputBorder.none,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                      ),
                       filled: true,
                       fillColor: Colors.grey[200],
                       contentPadding: const EdgeInsets.all(10.0),
@@ -144,12 +149,10 @@ class _ConversationScreenState extends State<ConversationScreen> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                CircleAvatar(
+                FloatingActionButton(
                   backgroundColor: Theme.of(context).colorScheme.secondary,
-                  child: IconButton(
-                    icon: const Icon(Icons.send, color: Colors.white),
-                    onPressed: sendMessage,
-                  ),
+                  onPressed: sendMessage,
+                  child: const Icon(Icons.send, color: Colors.white),
                 ),
               ],
             ),

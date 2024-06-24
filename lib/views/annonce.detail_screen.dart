@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import '../config.dart';
 import '../model/Annonce.dart';
 
@@ -15,17 +16,24 @@ class AnnonceDetailPage extends StatelessWidget {
     final token = prefs.getString('jwtToken');
     final userId = prefs.getInt('userId');
 
-
     if (token == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vous devez être connecté pour envoyer un message.')),
+      Fluttertoast.showToast(
+        msg: 'Vous devez être connecté pour envoyer un message.',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
       );
       return;
     }
 
     if (annonce.ownerId == null || annonce.ownerId <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Erreur interne, impossible d\'envoyer le message.')),
+      Fluttertoast.showToast(
+        msg: 'Erreur interne, impossible d\'envoyer le message.',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
       );
       return;
     }
@@ -64,18 +72,25 @@ class AnnonceDetailPage extends StatelessWidget {
                 );
 
                 if (response.statusCode == 200 || response.statusCode == 201) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Message envoyé avec succès.')),
+                  Fluttertoast.showToast(
+                    msg: 'Message envoyé avec succès.',
+                    toastLength: Toast.LENGTH_SHORT,
+                    gravity: ToastGravity.BOTTOM,
+                    backgroundColor: Colors.green,
+                    textColor: Colors.white,
                   );
                   Navigator.of(context).pop();
                 } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Échec de l\'envoi du message : ${response.body}')),
-                );
-                Navigator.of(context).pop();
+                  Fluttertoast.showToast(
+                    msg: 'Échec de l\'envoi du message : ${response.body}',
+                    toastLength: Toast.LENGTH_SHORT,
+                    gravity: ToastGravity.BOTTOM,
+                    backgroundColor: Colors.red,
+                    textColor: Colors.white,
+                  );
+                  Navigator.of(context).pop();
+                }
               }
-
-            }
             },
             child: const Text('Envoyer'),
           ),
@@ -99,38 +114,66 @@ class AnnonceDetailPage extends StatelessWidget {
     }
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(annonce.title),
+        backgroundColor: Colors.blueAccent,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Image(
-              image: annonce.getImageProvider(),
-              fit: BoxFit.cover,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              annonce.title,
-              style: Theme.of(context).textTheme.headline6,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '${annonce.km.toStringAsFixed(1)} km',
-              style: Theme.of(context).textTheme.subtitle1,
-            ),
-            ElevatedButton(
-              onPressed: () => _navigateAndDisplayMessageScreen(context),
-              child: const Text('Contacter et Louer'),
-            ),
-          ],
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(15.0),
+                child: _buildImage(annonce.imageUrl),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                annonce.title,
+                style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Icon(
+                    Icons.location_on,
+                    color: Colors.grey[600],
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${annonce.km.toStringAsFixed(1)} km',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Text(
+                annonce.description,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 16),
+              Center(
+                child: ElevatedButton.icon(
+                  onPressed: () => _navigateAndDisplayMessageScreen(context),
+                  icon: const Icon(Icons.message),
+                  label: const Text('Contacter et Louer'),
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.white, backgroundColor: Colors.blueAccent,
+                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

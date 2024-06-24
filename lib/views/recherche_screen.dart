@@ -1,7 +1,9 @@
 import 'package:client/views/pages/CategoryDetailsScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:fluttertoast/fluttertoast.dart';
 import 'dart:convert';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
 import '../config.dart';
 
@@ -29,7 +31,11 @@ class _RechercherScreenState extends State<RechercherScreen> {
         categories = json.decode(response.body);
       });
     } else {
-      print('Failed to load categories');
+      Fluttertoast.showToast(
+        msg: 'Échec du chargement des catégories',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+      );
     }
   }
 
@@ -40,14 +46,22 @@ class _RechercherScreenState extends State<RechercherScreen> {
         categories = json.decode(response.body);
       });
     } else {
-      print('Failed to search categories');
+      Fluttertoast.showToast(
+        msg: 'Échec de la recherche de catégories',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final bool isLargeScreen = MediaQuery.of(context).size.width > 800;
     return Scaffold(
-      appBar: AppBar(title: Text('Rechercher')),
+      appBar: isLargeScreen ? null : AppBar(
+        title: Text('Rechercher'),
+        backgroundColor: Colors.blueAccent,
+      ),
       body: Column(
         children: [
           Padding(
@@ -56,38 +70,57 @@ class _RechercherScreenState extends State<RechercherScreen> {
               controller: searchController,
               decoration: InputDecoration(
                 labelText: 'Recherche',
-                suffixIcon: Icon(Icons.search),
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
               ),
               onChanged: (value) => searchCategories(value),
             ),
           ),
           Expanded(
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: categories.length,
-              itemBuilder: (context, index) {
-                return InkWell(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => CategoryDetailsScreen(
-                        categoryId: categories[index]['id'],
-                        categoryName: categories[index]['name'],
-                      )),
-                    );
-                  },
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: MasonryGridView.count(
+                crossAxisCount: MediaQuery.of(context).size.width > 600 ? 3 : 1,
+                itemCount: categories.length,
+                itemBuilder: (context, index) {
+                  return InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => CategoryDetailsScreen(
+                            categoryId: categories[index]['id'],
+                            categoryName: categories[index]['name'],
+                          ),
+                        ),
+                      );
+                    },
+                    child: Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15.0),
+                      ),
+                      elevation: 4,
                       child: Center(
-                        child: Text(categories[index]['name']),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Text(
+                            categories[index]['name'],
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+                mainAxisSpacing: 8.0,
+                crossAxisSpacing: 8.0,
+              ),
             ),
-
           ),
         ],
       ),

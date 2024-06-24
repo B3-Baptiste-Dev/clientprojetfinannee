@@ -4,9 +4,8 @@ import 'package:geolocator/geolocator.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import '../model/Annonce.dart';
-import '../widgets/MonWidgetImage.dart';
 import 'annonce.detail_screen.dart';
 
 class ListeScreen extends StatefulWidget {
@@ -91,9 +90,11 @@ class _ListeScreenState extends State<ListeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isLargeScreen = MediaQuery.of(context).size.width > 800;
     return Scaffold(
-      appBar: AppBar(
+      appBar: isLargeScreen ? null : AppBar(
         title: Text('Liste des annonces'),
+        backgroundColor: Colors.blueAccent,
       ),
       body: FutureBuilder<List<Annonce>>(
         future: futureAnnonces,
@@ -106,55 +107,82 @@ class _ListeScreenState extends State<ListeScreen> {
             return const Center(child: Text('Aucune annonce disponible.'));
           } else {
             List<Annonce> annonces = snapshot.data!;
-            return ListView.builder(
-              itemCount: annonces.length,
-              itemBuilder: (context, index) {
-                final annonce = annonces[index];
-                return GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            AnnonceDetailPage(annonce: annonces[index]),
+            int crossAxisCount = MediaQuery.of(context).size.width > 600 ? 3 : 1;
+            return Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: AlignedGridView.count(
+                crossAxisCount: crossAxisCount,
+                mainAxisSpacing: 8.0,
+                crossAxisSpacing: 8.0,
+                itemBuilder: (context, index) {
+                  final annonce = annonces[index];
+                  return GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              AnnonceDetailPage(annonce: annonces[index]),
+                        ),
+                      );
+                    },
+                    child: Card(
+                      margin: EdgeInsets.all(8.0),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15.0),
                       ),
-                    );
-                  },
-                  child: Card(
-                    margin: EdgeInsets.all(
-                        8.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment
-                          .start,
-                      children: [
-                        ClipRRect(
-                          borderRadius: const BorderRadius.vertical(
-                              top: Radius.circular(
-                                  8.0)),
-                          child: AspectRatio(
-                            aspectRatio: 16 / 9,
-                            child: Image(
-                              image: annonce.getImageProvider(),
-                              fit: BoxFit.cover,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ClipRRect(
+                            borderRadius: const BorderRadius.vertical(
+                                top: Radius.circular(15.0)),
+                            child: AspectRatio(
+                              aspectRatio: 16 / 9,
+                              child: Image(
+                                image: annonce.getImageProvider(),
+                                fit: BoxFit.cover,
+                              ),
                             ),
                           ),
-                        ),
-                        Padding(
-                          padding:
-                              const EdgeInsets.all(8.0),
-                          child: Text(
-                            annonce.title,
-                            style: const TextStyle(
-                              fontSize: 20.0,
-                              fontWeight: FontWeight.bold,
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: ListTile(
+                              title: Text(
+                                annonce.title,
+                                style: const TextStyle(
+                                  fontSize: 20.0,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '${annonce.km} km',
+                                    style: TextStyle(
+                                      fontSize: 16.0,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                  Text(
+                                    annonce.description,
+                                    style: TextStyle(
+                                      fontSize: 14.0,
+                                      color: Colors.grey[800],
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+                itemCount: annonces.length,
+              ),
             );
           }
         },

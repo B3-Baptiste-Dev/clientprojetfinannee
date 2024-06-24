@@ -81,9 +81,11 @@ class _MessageScreenState extends State<MessageScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isLargeScreen = MediaQuery.of(context).size.width > 800;
     return Scaffold(
-      appBar: AppBar(
+      appBar: isLargeScreen ? null : AppBar(
         title: const Text('Messages'),
+        backgroundColor: Colors.blueAccent,
       ),
       body: isAuthenticated ? buildMessageList() : buildNotAuthenticatedMessage(),
     );
@@ -103,9 +105,26 @@ class _MessageScreenState extends State<MessageScreen> {
               ),
             );
           },
-          child: ListTile(
-            title: Text(conversation.userName),
-            subtitle: Text(conversation.lastMessage),
+          child: Card(
+            elevation: 2,
+            margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: ListTile(
+              leading: CircleAvatar(
+                backgroundColor: Colors.blueAccent,
+                child: Text(
+                  conversation.userName[0],
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+              title: Text(
+                conversation.userName,
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(conversation.lastMessage),
+            ),
           ),
         );
       },
@@ -114,7 +133,26 @@ class _MessageScreenState extends State<MessageScreen> {
 
   Widget buildNotAuthenticatedMessage() {
     return Center(
-      child: Text("Vous n'êtes pas connecté. Veuillez vous connecter pour voir les messages."),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.lock,
+            size: 100,
+            color: Colors.grey,
+          ),
+          SizedBox(height: 20),
+          Text(
+            "Vous n'êtes pas connecté.",
+            style: TextStyle(fontSize: 20),
+          ),
+          SizedBox(height: 10),
+          Text(
+            "Veuillez vous connecter pour voir les messages.",
+            style: TextStyle(fontSize: 16, color: Colors.grey),
+          ),
+        ],
+      ),
     );
   }
 }
