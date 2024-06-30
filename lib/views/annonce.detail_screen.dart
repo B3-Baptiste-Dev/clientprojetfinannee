@@ -6,13 +6,26 @@ import 'package:fluttertoast/fluttertoast.dart';
 import '../config.dart';
 import '../model/Annonce.dart';
 
-class AnnonceDetailPage extends StatelessWidget {
+class AnnonceDetailPage extends StatefulWidget {
   final Annonce annonce;
 
   const AnnonceDetailPage({Key? key, required this.annonce}) : super(key: key);
 
+  @override
+  _AnnonceDetailPageState createState() => _AnnonceDetailPageState();
+}
+
+class _AnnonceDetailPageState extends State<AnnonceDetailPage> {
+  late Future<SharedPreferences> _prefs;
+
+  @override
+  void initState() {
+    super.initState();
+    _prefs = SharedPreferences.getInstance();
+  }
+
   Future<void> _navigateAndDisplayMessageScreen(BuildContext context) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
     final token = prefs.getString('jwtToken');
     final userId = prefs.getInt('userId');
 
@@ -27,7 +40,7 @@ class AnnonceDetailPage extends StatelessWidget {
       return;
     }
 
-    if (annonce.ownerId == null || annonce.ownerId <= 0) {
+    if (widget.annonce.ownerId == null || widget.annonce.ownerId <= 0) {
       Fluttertoast.showToast(
         msg: 'Erreur interne, impossible d\'envoyer le message.',
         toastLength: Toast.LENGTH_SHORT,
@@ -42,7 +55,7 @@ class AnnonceDetailPage extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Envoyer un message à propos de "${annonce.title}"'),
+        title: Text('Envoyer un message à propos de "${widget.annonce.title}"'),
         content: TextField(
           controller: messageController,
           decoration: const InputDecoration(hintText: "Tapez votre message ici"),
@@ -59,7 +72,7 @@ class AnnonceDetailPage extends StatelessWidget {
                 final messageData = json.encode({
                   'content': message,
                   'sentById': userId,
-                  'receivedById': annonce.ownerId,
+                  'receivedById': widget.annonce.ownerId,
                 });
 
                 final response = await http.post(
@@ -100,13 +113,41 @@ class AnnonceDetailPage extends StatelessWidget {
   }
 
   Widget _buildImage(String imageUrl) {
+    if (imageUrl.isEmpty) {
+      return Container(
+        color: Colors.grey[200],
+        child: const Icon(Icons.broken_image),
+      );
+    }
+
     try {
       if (imageUrl.startsWith('data:image') && imageUrl.contains('base64,')) {
         final base64String = imageUrl.split('base64,')[1];
         final decodedBytes = base64Decode(base64String);
-        return Image.memory(decodedBytes, fit: BoxFit.cover);
+        return Image.memory(
+          decodedBytes,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => const Icon(Icons.error),
+        );
       } else {
-        return Image.network(imageUrl, fit: BoxFit.cover);
+        return Image.network(
+          imageUrl,
+          fit: BoxFit.cover,
+          loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
+            if (loadingProgress == null) {
+              return child;
+            } else {
+              return Center(
+                child: CircularProgressIndicator(
+                  value: loadingProgress.expectedTotalBytes != null
+                      ? loadingProgress.cumulativeBytesLoaded / (loadingProgress.expectedTotalBytes ?? 1)
+                      : null,
+                ),
+              );
+            }
+          },
+          errorBuilder: (context, error, stackTrace) => const Icon(Icons.error),
+        );
       }
     } catch (e) {
       print("Erreur de décodage base64 : $e");
@@ -118,8 +159,8 @@ class AnnonceDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(annonce.title),
-        backgroundColor: Colors.blueAccent,
+        title: Text(widget.annonce.title),
+        backgroundColor: Config.lightBlue,
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -129,11 +170,14 @@ class AnnonceDetailPage extends StatelessWidget {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(15.0),
-                child: _buildImage(annonce.imageUrl),
+                child: Container(
+                  color: Colors.grey[200],
+                  child: _buildImage(widget.annonce.imageUrl),
+                ),
               ),
               const SizedBox(height: 16),
               Text(
-                annonce.title,
+                widget.annonce.title,
                 style: Theme.of(context).textTheme.titleMedium!.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -147,14 +191,14 @@ class AnnonceDetailPage extends StatelessWidget {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    '${annonce.km.toStringAsFixed(1)} km',
+                    '${widget.annonce.km.toStringAsFixed(1)} km',
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                 ],
               ),
               const SizedBox(height: 16),
               Text(
-                annonce.description,
+                widget.annonce.description,
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 16),
@@ -165,7 +209,7 @@ class AnnonceDetailPage extends StatelessWidget {
                   label: const Text('Contacter et Louer'),
                   style: ElevatedButton.styleFrom(
                     foregroundColor: Colors.white, backgroundColor: Colors.blueAccent,
-                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10.0),
                     ),

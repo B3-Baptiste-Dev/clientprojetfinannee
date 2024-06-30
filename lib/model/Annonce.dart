@@ -65,9 +65,12 @@ class Annonce {
     }
   }
 
-
   void calculateDistance({required double userLat, required double userLon}) {
     final double distance = Geolocator.distanceBetween(userLat, userLon, this.latitude, this.longitude);
     this.km = distance / 1000;
+  }
+
+  String getFormattedDistance() {
+    return km.toStringAsFixed(2);
   }
 }

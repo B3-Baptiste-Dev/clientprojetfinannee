@@ -35,6 +35,7 @@ class _RechercherScreenState extends State<RechercherScreen> {
         msg: 'Échec du chargement des catégories',
         toastLength: Toast.LENGTH_SHORT,
         gravity: ToastGravity.BOTTOM,
+        backgroundColor: Config.brightOrange,
       );
     }
   }
@@ -50,6 +51,7 @@ class _RechercherScreenState extends State<RechercherScreen> {
         msg: 'Échec de la recherche de catégories',
         toastLength: Toast.LENGTH_SHORT,
         gravity: ToastGravity.BOTTOM,
+        backgroundColor: Config.brightOrange,
       );
     }
   }
@@ -60,7 +62,7 @@ class _RechercherScreenState extends State<RechercherScreen> {
     return Scaffold(
       appBar: isLargeScreen ? null : AppBar(
         title: Text('Rechercher'),
-        backgroundColor: Colors.blueAccent,
+        backgroundColor: Config.lightBlue,
       ),
       body: Column(
         children: [
@@ -70,8 +72,12 @@ class _RechercherScreenState extends State<RechercherScreen> {
               controller: searchController,
               decoration: InputDecoration(
                 labelText: 'Recherche',
-                prefixIcon: Icon(Icons.search),
+                prefixIcon: Icon(Icons.search, color: Config.darkGray),
                 border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Config.lightBlue),
                   borderRadius: BorderRadius.circular(8.0),
                 ),
               ),
@@ -110,6 +116,7 @@ class _RechercherScreenState extends State<RechercherScreen> {
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
+                              color: Config.navyBlue,
                             ),
                           ),
                         ),

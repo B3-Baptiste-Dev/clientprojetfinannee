@@ -66,7 +66,7 @@ class _CompteScreenState extends State<CompteScreen> {
           ? null
           : AppBar(
         title: const Text('Compte'),
-        backgroundColor: Colors.blueAccent,
+        backgroundColor: Config.lightBlue,
       ),
       body: Center(
         child: Padding(
@@ -77,10 +77,10 @@ class _CompteScreenState extends State<CompteScreen> {
               if (isLoggedIn) ...[
                 CircleAvatar(
                   radius: 50,
-                  backgroundColor: Colors.blueAccent,
+                  backgroundColor: Config.lightBlue,
                   child: Text(
                     '${firstName[0]}${lastName[0]}',
-                    style: TextStyle(fontSize: 40, color: Colors.white),
+                    style: TextStyle(fontSize: 40, color: Config.white),
                   ),
                 ),
                 SizedBox(height: 20),
@@ -89,6 +89,7 @@ class _CompteScreenState extends State<CompteScreen> {
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
+                    color: Config.darkGray,
                   ),
                 ),
                 SizedBox(height: 20),
@@ -97,7 +98,8 @@ class _CompteScreenState extends State<CompteScreen> {
                   icon: Icon(Icons.logout),
                   label: const Text('Se déconnecter'),
                   style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.white, backgroundColor: Colors.redAccent,
+                    foregroundColor: Config.white,
+                    backgroundColor: Config.brightOrange,
                     padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10.0),
@@ -110,7 +112,8 @@ class _CompteScreenState extends State<CompteScreen> {
                   icon: Icon(Icons.list),
                   label: const Text('Mes annonces'),
                   style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.white, backgroundColor: Colors.blueAccent,
+                    foregroundColor: Config.white,
+                    backgroundColor: Config.lightBlue,
                     padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10.0),
@@ -128,7 +131,8 @@ class _CompteScreenState extends State<CompteScreen> {
                   icon: Icon(Icons.settings),
                   label: const Text("Paramètres"),
                   style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.white, backgroundColor: Colors.blueAccent,
+                    foregroundColor: Config.white,
+                    backgroundColor: Config.lightBlue,
                     padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10.0),
@@ -140,7 +144,8 @@ class _CompteScreenState extends State<CompteScreen> {
                   onPressed: () => Navigator.pushNamed(context, '/login'),
                   child: const Text('Se connecter'),
                   style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.white, backgroundColor: Colors.blueAccent,
+                    foregroundColor: Config.white,
+                    backgroundColor: Config.lightBlue,
                     padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10.0),
@@ -152,7 +157,8 @@ class _CompteScreenState extends State<CompteScreen> {
                   onPressed: () => Navigator.pushNamed(context, '/register'),
                   child: const Text("S'inscrire"),
                   style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.white, backgroundColor: Colors.blueAccent,
+                    foregroundColor: Config.white,
+                    backgroundColor: Config.lightBlue,
                     padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10.0),

@@ -65,17 +65,11 @@ class _RegisterPageState extends State<RegisterPage> {
       'lastName': _lastNameController.text,
     });
 
-    print('Sending request to ${Config.API_URL}/api/v1/auth/register');
-    print('Request body: $body');
-
     final response = await http.post(
       Uri.parse('${Config.API_URL}/api/v1/auth/register'),
       headers: {'Content-Type': 'application/json'},
       body: body,
     );
-
-    print('Response status: ${response.statusCode}');
-    print('Response body: ${response.body}');
 
     if (response.statusCode == 201) {
       final data = json.decode(response.body);
@@ -89,7 +83,6 @@ class _RegisterPageState extends State<RegisterPage> {
       Navigator.of(context).popUntil((route) => route.isFirst);
       Navigator.pushReplacementNamed(context, '/');
     } else {
-      print('Registration failed with status code ${response.statusCode} and body ${response.body}');
       showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -118,7 +111,7 @@ class _RegisterPageState extends State<RegisterPage> {
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
-            Navigator.pushReplacementNamed(context, '/compte');
+            Navigator.pop(context);
           },
         ),
       ),

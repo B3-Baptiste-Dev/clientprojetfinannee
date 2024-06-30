@@ -1,8 +1,8 @@
+import 'package:client/config.dart';
 import 'package:client/views/loginpage_screen.dart';
 import 'package:client/views/pages/MyAnnonces.dart';
 import 'package:client/views/pages/add_annonce_screen.dart';
 import 'package:client/views/register_screen.dart';
-import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'views/compte_screen.dart';
 import 'views/liste_screen.dart';
@@ -18,6 +18,17 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Mon Application',
+      theme: ThemeData(
+        primaryColor: Config.lightBlue,
+        textTheme: const TextTheme(
+          bodyLarge: TextStyle(color: Config.darkGray),
+          bodyMedium: TextStyle(color: Config.darkGray),
+        ),
+        buttonTheme: const ButtonThemeData(
+          buttonColor: Config.lightBlue,
+          textTheme: ButtonTextTheme.primary,
+        ),
+      ),
       initialRoute: '/',
       routes: {
         '/': (context) => MyHomePage(),
@@ -55,35 +66,31 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      title: Text('Mon Application'),
-      bottom: TabBar(
-        onTap: onTabTapped,
-        tabs: [
-          Tab(icon: Icon(Icons.list), text: "Annonces"),
-          Tab(icon: Icon(Icons.search), text: "Rechercher"),
-          Tab(icon: Icon(Icons.add), text: "Ajouter"),
-          Tab(icon: Icon(Icons.message), text: "Messages"),
-          Tab(icon: Icon(Icons.account_circle), text: "Compte"),
-        ],
-      ),
+      title: Text('BricoPartage'),
+      backgroundColor: Config.lightBlue,
     );
   }
 
   Widget _buildBottomNavigationBar() {
-    return CurvedNavigationBar(
-      index: _currentIndex,
-      items: const <Widget>[
-        Icon(Icons.list, size: 30),
-        Icon(Icons.search, size: 30),
-        Icon(Icons.add, size: 30),
-        Icon(Icons.message, size: 30),
-        Icon(Icons.account_circle, size: 30),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Divider(
+          height: 1,
+          color: Config.darkGray,
+        ),
+        TabBar(
+          onTap: onTabTapped,
+          indicatorColor: Config.brightOrange,
+          tabs: [
+            Tab(icon: Icon(Icons.list, color: _currentIndex == 0 ? Config.brightOrange : Config.darkGray), text: "Annonces"),
+            Tab(icon: Icon(Icons.search, color: _currentIndex == 1 ? Config.brightOrange : Config.darkGray), text: "Rechercher"),
+            Tab(icon: Icon(Icons.add, color: _currentIndex == 2 ? Config.brightOrange : Config.darkGray), text: "Ajouter"),
+            Tab(icon: Icon(Icons.message, color: _currentIndex == 3 ? Config.brightOrange : Config.darkGray), text: "Messages"),
+            Tab(icon: Icon(Icons.account_circle, color: _currentIndex == 4 ? Config.brightOrange : Config.darkGray), text: "Compte"),
+          ],
+        ),
       ],
-      onTap: onTabTapped,
-      backgroundColor: Colors.transparent,
-      color: Colors.blue,
-      buttonBackgroundColor: Colors.blue,
-      height: 70,
     );
   }
 
@@ -93,9 +100,12 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     return DefaultTabController(
       length: _children.length,
       child: Scaffold(
-        appBar: isLargeScreen ? _buildAppBar() : null,
-        body: _children[_currentIndex],
-        bottomNavigationBar: isLargeScreen ? null : _buildBottomNavigationBar(),
+        appBar: _buildAppBar(),
+        body: IndexedStack(
+          index: _currentIndex,
+          children: _children,
+        ),
+        bottomNavigationBar: _buildBottomNavigationBar(),
       ),
     );
   }

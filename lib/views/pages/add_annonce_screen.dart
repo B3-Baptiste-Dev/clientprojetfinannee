@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import '../../config.dart';
+import '../../widgets/buildNotAuthenticatedMessage.dart';
 
 class AddAnnonceScreen extends StatefulWidget {
   @override
@@ -18,13 +19,30 @@ class _AddAnnonceScreenState extends State<AddAnnonceScreen> {
   final _descriptionController = TextEditingController();
   final _categoryIdController = TextEditingController();
   File? _image;
+  SharedPreferences? prefs;
+  String? token;
+  bool isAuthenticated = true;
+  @override
+  void initState() {
+    super.initState();
+    _loadSharedPreferences();
+  }
+
+  Future<void> _loadSharedPreferences() async {
+    prefs = await SharedPreferences.getInstance();
+    setState(() {
+      token = prefs?.getString('jwtToken');
+    });
+    if (token == null) {
+      setState(() {
+        isAuthenticated = false;
+      });
+    }
+  }
 
   Future<void> _addAnnonce() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('jwtToken');
     final position = await _determinePosition();
-
-    if (token == null || _image == null || prefs.getInt('userId') == null) {
+    if (token == null || _image == null || prefs?.getInt('userId') == null) {
       Fluttertoast.showToast(
         msg: 'Erreur lors de la préparation de la requête.',
         toastLength: Toast.LENGTH_SHORT,
@@ -51,7 +69,7 @@ class _AddAnnonceScreenState extends State<AddAnnonceScreen> {
       'title': _titleController.text,
       'description': _descriptionController.text,
       'categoryId': categoryId.toString(),
-      'ownerId': prefs.getInt('userId').toString(),
+      'ownerId': prefs?.getInt('userId').toString(),
       'available': true,
     };
 
@@ -128,59 +146,64 @@ class _AddAnnonceScreenState extends State<AddAnnonceScreen> {
         title: Text('Ajouter une annonce'),
         backgroundColor: Colors.blueAccent,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildTextField('Titre', _titleController),
-            const SizedBox(height: 16),
-            _buildTextField('Description', _descriptionController, maxLines: 4),
-            const SizedBox(height: 16),
-            _buildTextField('ID Catégorie', _categoryIdController, keyboardType: TextInputType.number),
-            const SizedBox(height: 16),
-            _image != null
-                ? Image.file(_image!)
-                : Container(
-              height: 150,
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Center(child: Text('Aucune image sélectionnée.')),
+      body: isAuthenticated
+          ? buildView()
+          : buildNotAuthenticatedMessage(),    );
+  }
+
+  Widget buildView() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildTextField('Titre', _titleController),
+          const SizedBox(height: 16),
+          _buildTextField('Description', _descriptionController, maxLines: 4),
+          const SizedBox(height: 16),
+          _buildTextField('ID Catégorie', _categoryIdController, keyboardType: TextInputType.number),
+          const SizedBox(height: 16),
+          _image != null
+              ? Image.file(_image!)
+              : Container(
+            height: 150,
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey),
+              borderRadius: BorderRadius.circular(8),
             ),
-            const SizedBox(height: 16),
-            Center(
-              child: ElevatedButton.icon(
-                onPressed: _pickImage,
-                icon: Icon(Icons.image),
-                label: Text('Sélectionner une image'),
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.white, backgroundColor: Colors.blueAccent,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            child: Center(child: Text('Aucune image sélectionnée.')),
+          ),
+          const SizedBox(height: 16),
+          Center(
+            child: ElevatedButton.icon(
+              onPressed: _pickImage,
+              icon: Icon(Icons.image),
+              label: Text('Sélectionner une image'),
+              style: ElevatedButton.styleFrom(
+                foregroundColor: Colors.white, backgroundColor: Colors.blueAccent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
                 ),
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
             ),
-            const SizedBox(height: 16),
-            Center(
-              child: ElevatedButton.icon(
-                onPressed: _addAnnonce,
-                icon: Icon(Icons.add),
-                label: Text('Ajouter l\'annonce'),
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.white, backgroundColor: Colors.green,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          ),
+          const SizedBox(height: 16),
+          Center(
+            child: ElevatedButton.icon(
+              onPressed: _addAnnonce,
+              icon: Icon(Icons.add),
+              label: Text('Ajouter l\'annonce'),
+              style: ElevatedButton.styleFrom(
+                foregroundColor: Colors.white, backgroundColor: Colors.green,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
                 ),
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -209,3 +232,5 @@ class _AddAnnonceScreenState extends State<AddAnnonceScreen> {
     );
   }
 }
+
+

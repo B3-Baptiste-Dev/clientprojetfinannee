@@ -75,7 +75,7 @@ class _ListeScreenState extends State<ListeScreen> {
 
     if (response.statusCode == 200) {
       List jsonResponse = json.decode(response.body);
-      return jsonResponse.map((annonce) {
+      return jsonResponse.map<Annonce>((annonce) {
         final annonceObj = Annonce.fromJson(annonce);
         annonceObj.calculateDistance(
             userLat: position.latitude, userLon: position.longitude);
@@ -92,9 +92,11 @@ class _ListeScreenState extends State<ListeScreen> {
   Widget build(BuildContext context) {
     final bool isLargeScreen = MediaQuery.of(context).size.width > 800;
     return Scaffold(
-      appBar: isLargeScreen ? null : AppBar(
+      appBar: isLargeScreen
+          ? null
+          : AppBar(
         title: Text('Liste des annonces'),
-        backgroundColor: Colors.blueAccent,
+        backgroundColor: Config.lightBlue,
       ),
       body: FutureBuilder<List<Annonce>>(
         future: futureAnnonces,
@@ -139,9 +141,17 @@ class _ListeScreenState extends State<ListeScreen> {
                                 top: Radius.circular(15.0)),
                             child: AspectRatio(
                               aspectRatio: 16 / 9,
-                              child: Image(
-                                image: annonce.getImageProvider(),
-                                fit: BoxFit.cover,
+                              child: Container(
+                                color: Colors.grey[200],
+                                child: annonce.imageData != null
+                                    ? Image.memory(
+                                  annonce.imageData!,
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (context, error,
+                                      stackTrace) =>
+                                      Icon(Icons.error),
+                                )
+                                    : Icon(Icons.broken_image),
                               ),
                             ),
                           ),
@@ -153,23 +163,24 @@ class _ListeScreenState extends State<ListeScreen> {
                                 style: const TextStyle(
                                   fontSize: 20.0,
                                   fontWeight: FontWeight.bold,
+                                  color: Config.navyBlue,
                                 ),
                               ),
                               subtitle: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    '${annonce.km} km',
+                                    '${annonce.getFormattedDistance()} km',
                                     style: TextStyle(
                                       fontSize: 16.0,
-                                      color: Colors.grey[600],
+                                      color: Config.darkGray,
                                     ),
                                   ),
                                   Text(
                                     annonce.description,
                                     style: TextStyle(
                                       fontSize: 14.0,
-                                      color: Colors.grey[800],
+                                      color: Config.darkGray,
                                     ),
                                   ),
                                 ],

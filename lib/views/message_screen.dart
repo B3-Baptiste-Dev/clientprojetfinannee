@@ -2,7 +2,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import '../model/MessageModel.dart';
+import '../widgets/buildNotAuthenticatedMessage.dart';
 import 'conversation_screen.dart';
 import '../config.dart';
 
@@ -40,14 +42,19 @@ class _MessageScreenState extends State<MessageScreen> {
     final token = prefs.getString('jwtToken');
 
     if (token == null) {
-      print('Utilisateur non connecté');
       setState(() {
         isAuthenticated = false;
       });
+      // Fluttertoast.showToast(
+      //   msg: 'Vous devez être connecté pour voir les messages.',
+      //   toastLength: Toast.LENGTH_SHORT,
+      //   gravity: ToastGravity.BOTTOM,
+      //   backgroundColor: Colors.red,
+      //   textColor: Colors.white,
+      // );
       return;
     }
 
-    print('Token: $token');
     final response = await http.get(
       Uri.parse('${Config.API_URL}/api/v1/messages/received'),
       headers: {
@@ -81,13 +88,18 @@ class _MessageScreenState extends State<MessageScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final bool isLargeScreen = MediaQuery.of(context).size.width > 800;
+    final bool isLargeScreen = MediaQuery
+        .of(context)
+        .size
+        .width > 800;
     return Scaffold(
       appBar: isLargeScreen ? null : AppBar(
         title: const Text('Messages'),
         backgroundColor: Colors.blueAccent,
       ),
-      body: isAuthenticated ? buildMessageList() : buildNotAuthenticatedMessage(),
+      body: isAuthenticated
+          ? buildMessageList()
+          : buildNotAuthenticatedMessage(),
     );
   }
 
@@ -101,7 +113,8 @@ class _MessageScreenState extends State<MessageScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => ConversationScreen(otherUserId: conversation.otherUserId),
+                builder: (context) =>
+                    ConversationScreen(otherUserId: conversation.otherUserId),
               ),
             );
           },
@@ -128,31 +141,6 @@ class _MessageScreenState extends State<MessageScreen> {
           ),
         );
       },
-    );
-  }
-
-  Widget buildNotAuthenticatedMessage() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.lock,
-            size: 100,
-            color: Colors.grey,
-          ),
-          SizedBox(height: 20),
-          Text(
-            "Vous n'êtes pas connecté.",
-            style: TextStyle(fontSize: 20),
-          ),
-          SizedBox(height: 10),
-          Text(
-            "Veuillez vous connecter pour voir les messages.",
-            style: TextStyle(fontSize: 16, color: Colors.grey),
-          ),
-        ],
-      ),
     );
   }
 }
