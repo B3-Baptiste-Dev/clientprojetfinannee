@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:client/config.dart';
+import '../widgets/PasswordField.dart';
 
 class RegisterPage extends StatefulWidget {
   @override
@@ -17,27 +18,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _lastNameController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  String _passwordError = '';
   String _confirmPasswordError = '';
-
-  bool _isPasswordValid(String password) {
-    if (password.length < 8) {
-      setState(() {
-        _passwordError = 'Le mot de passe doit comporter au moins 8 caractères.';
-      });
-      return false;
-    } else if (!RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#\$&*~]).{8,}$').hasMatch(password)) {
-      setState(() {
-        _passwordError = 'Le mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un symbole.';
-      });
-      return false;
-    } else {
-      setState(() {
-        _passwordError = '';
-      });
-      return true;
-    }
-  }
 
   bool _arePasswordsMatching(String password, String confirmPassword) {
     if (password != confirmPassword) {
@@ -54,7 +35,7 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   Future<void> _register() async {
-    if (!_isPasswordValid(_passwordController.text) || !_arePasswordsMatching(_passwordController.text, _confirmPasswordController.text)) {
+    if (!_arePasswordsMatching(_passwordController.text, _confirmPasswordController.text)) {
       return;
     }
 
@@ -151,17 +132,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   return null;
                 },
               ),
-              TextFormField(
-                controller: _passwordController,
-                decoration: InputDecoration(
-                  labelText: 'Mot de passe',
-                  errorText: _passwordError.isNotEmpty ? _passwordError : null,
-                ),
-                obscureText: true,
-                onChanged: (value) {
-                  _isPasswordValid(value);
-                },
-              ),
+              PasswordField(controller: _passwordController),
               TextFormField(
                 controller: _confirmPasswordController,
                 decoration: InputDecoration(
