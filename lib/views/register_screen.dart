@@ -1,8 +1,8 @@
-import 'package:client/config.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:client/config.dart';
 
 class RegisterPage extends StatefulWidget {
   @override
@@ -158,6 +158,9 @@ class _RegisterPageState extends State<RegisterPage> {
                   errorText: _passwordError.isNotEmpty ? _passwordError : null,
                 ),
                 obscureText: true,
+                onChanged: (value) {
+                  _isPasswordValid(value);
+                },
               ),
               TextFormField(
                 controller: _confirmPasswordController,
@@ -166,6 +169,9 @@ class _RegisterPageState extends State<RegisterPage> {
                   errorText: _confirmPasswordError.isNotEmpty ? _confirmPasswordError : null,
                 ),
                 obscureText: true,
+                onChanged: (value) {
+                  _arePasswordsMatching(_passwordController.text, value);
+                },
               ),
               ElevatedButton(
                 onPressed: _register,
