@@ -2,22 +2,32 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import '../model/MessageModel.dart';
 import '../widgets/buildNotAuthenticatedMessage.dart';
 import 'conversation_screen.dart';
 import '../config.dart';
 
 class Conversation {
-  final int otherUserId;
+  final int conversationId;
   final String lastMessage;
   final String userName;
+  final String objectTitle;
 
   Conversation({
-    required this.otherUserId,
+    required this.conversationId,
     required this.lastMessage,
     required this.userName,
+    required this.objectTitle,
   });
+
+  factory Conversation.fromJson(Map<String, dynamic> json) {
+    return Conversation(
+      conversationId: json['conversationId'],
+      lastMessage: json['lastMessage'],
+      userName: json['userName'],
+      objectTitle: json['objectTitle'],
+    );
+  }
 }
 
 class MessageScreen extends StatefulWidget {
@@ -34,10 +44,10 @@ class _MessageScreenState extends State<MessageScreen> {
   @override
   void initState() {
     super.initState();
-    fetchMessages();
+    fetchConversations();
   }
 
-  Future<void> fetchMessages() async {
+  Future<void> fetchConversations() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('jwtToken');
 
@@ -45,13 +55,6 @@ class _MessageScreenState extends State<MessageScreen> {
       setState(() {
         isAuthenticated = false;
       });
-      // Fluttertoast.showToast(
-      //   msg: 'Vous devez être connecté pour voir les messages.',
-      //   toastLength: Toast.LENGTH_SHORT,
-      //   gravity: ToastGravity.BOTTOM,
-      //   backgroundColor: Colors.red,
-      //   textColor: Colors.white,
-      // );
       return;
     }
 
@@ -64,46 +67,30 @@ class _MessageScreenState extends State<MessageScreen> {
     );
 
     if (response.statusCode == 200) {
-      final List<dynamic> messagesJson = json.decode(response.body);
-      final Map<int, Message> latestMessages = {};
-
-      for (var messageJson in messagesJson) {
-        final message = Message.fromJson(messageJson);
-        latestMessages[message.sentById] = message;
-      }
-
+      final List<dynamic> conversationsJson = json.decode(response.body);
       setState(() {
-        conversations = latestMessages.values.map((message) {
-          return Conversation(
-            otherUserId: message.sentById,
-            lastMessage: message.content,
-            userName: message.sentByName,
-          );
-        }).toList();
+        conversations = conversationsJson.map((json) => Conversation.fromJson(json)).toList();
       });
     } else {
-      print('Erreur lors de la récupération des messages: ${response.body}');
+      print('Erreur lors de la récupération des conversations: ${response.body}');
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final bool isLargeScreen = MediaQuery
-        .of(context)
-        .size
-        .width > 800;
+    final bool isLargeScreen = MediaQuery.of(context).size.width > 800;
     return Scaffold(
-      appBar: isLargeScreen ? null : AppBar(
+      appBar: isLargeScreen
+          ? null
+          : AppBar(
         title: const Text('Messages'),
         backgroundColor: Colors.blueAccent,
       ),
-      body: isAuthenticated
-          ? buildMessageList()
-          : buildNotAuthenticatedMessage(),
+      body: isAuthenticated ? buildConversationList() : buildNotAuthenticatedMessage(),
     );
   }
 
-  Widget buildMessageList() {
+  Widget buildConversationList() {
     return ListView.builder(
       itemCount: conversations.length,
       itemBuilder: (context, index) {
@@ -114,7 +101,7 @@ class _MessageScreenState extends State<MessageScreen> {
               context,
               MaterialPageRoute(
                 builder: (context) =>
-                    ConversationScreen(otherUserId: conversation.otherUserId),
+                    ConversationScreen(conversationId: conversation.conversationId),
               ),
             );
           },
@@ -136,7 +123,13 @@ class _MessageScreenState extends State<MessageScreen> {
                 conversation.userName,
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
-              subtitle: Text(conversation.lastMessage),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(conversation.lastMessage),
+                  Text('Objet: ${conversation.objectTitle}'), // Display object title
+                ],
+              ),
             ),
           ),
         );

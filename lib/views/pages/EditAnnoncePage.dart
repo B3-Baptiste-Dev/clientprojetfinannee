@@ -22,7 +22,7 @@ class _EditAnnoncePageState extends State<EditAnnoncePage> {
   @override
   void initState() {
     super.initState();
-    print(widget.annonce.id);
+    print('Annonce ID: ${widget.annonce.id}');  // Ajout du journal pour l'ID
     _titleController = TextEditingController(text: widget.annonce.title);
     _descriptionController = TextEditingController(text: widget.annonce.description);
   }
@@ -67,6 +67,7 @@ class _EditAnnoncePageState extends State<EditAnnoncePage> {
       }
     }
   }
+
 
   @override
   Widget build(BuildContext context) {

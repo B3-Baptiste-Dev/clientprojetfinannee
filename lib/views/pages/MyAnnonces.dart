@@ -25,6 +25,8 @@ class _MyAnnoncesPageState extends State<MyAnnoncesPage> {
     final token = prefs.getString('jwtToken');
     final userId = prefs.getInt('userId');
 
+    print(userId);
+
     if (token == null || userId == null) {
       throw Exception('Utilisateur non connecté ou ID utilisateur manquant');
     }
@@ -70,9 +72,10 @@ class _MyAnnoncesPageState extends State<MyAnnoncesPage> {
         futureAnnonces = fetchMyAnnonces();
       });
     } else {
-      throw Exception('Échec de la suppression de l\'annonce: ${response.statusCode}');
+      throw Exception('Échec de la suppression de l\'annonce: ${response.body}');
     }
   }
+
 
   void editAnnonce(Annonce annonce) {
     Navigator.push(
@@ -123,11 +126,10 @@ class _MyAnnoncesPageState extends State<MyAnnoncesPage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // TODO Logique pour naviguer vers la page de création d'une nouvelle annonce
+          // Logique pour naviguer vers la page de création d'une nouvelle annonce
         },
         child: Icon(Icons.add),
       ),
     );
   }
 }
-

@@ -6,45 +6,51 @@ import '../model/MessageModel.dart';
 import '../config.dart';
 
 class ConversationScreen extends StatefulWidget {
-  final int otherUserId;
+  final int conversationId;
 
-  const ConversationScreen({Key? key, required this.otherUserId}) : super(key: key);
+  const ConversationScreen({Key? key, required this.conversationId}) : super(key: key);
 
   @override
-  State<ConversationScreen> createState() => _ConversationScreenState();
+  _ConversationScreenState createState() => _ConversationScreenState();
 }
 
 class _ConversationScreenState extends State<ConversationScreen> {
   List<Message> messages = [];
-  final TextEditingController _messageController = TextEditingController();
-  final ScrollController _scrollController = ScrollController();
+  TextEditingController messageController = TextEditingController();
+  bool isAuthenticated = true;
 
   @override
   void initState() {
     super.initState();
-    fetchConversation();
+    fetchMessages();
   }
 
-  Future<void> fetchConversation() async {
+  Future<void> fetchMessages() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('jwtToken');
-    if (token != null) {
-      final response = await http.get(
-        Uri.parse('${Config.API_URL}/api/v1/messages/conversation/${widget.otherUserId}'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-      );
 
-      if (response.statusCode == 200) {
-        final List<dynamic> messagesJson = json.decode(response.body);
-        setState(() {
-          messages = messagesJson.map((json) => Message.fromJson(json)).toList();
-        });
-      } else {
-        print('Error fetching conversation: ${response.body}');
-      }
+    if (token == null) {
+      setState(() {
+        isAuthenticated = false;
+      });
+      return;
+    }
+
+    final response = await http.get(
+      Uri.parse('${Config.API_URL}/api/v1/messages/conversation/${widget.conversationId}'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> messagesJson = json.decode(response.body);
+      setState(() {
+        messages = messagesJson.map((json) => Message.fromJson(json)).toList();
+      });
+    } else {
+      print('Erreur lors de la récupération des messages: ${response.body}');
     }
   }
 
@@ -53,36 +59,34 @@ class _ConversationScreenState extends State<ConversationScreen> {
     final token = prefs.getString('jwtToken');
     final userId = prefs.getInt('userId');
 
-    if (token != null && userId != null && _messageController.text.isNotEmpty) {
-      final messageData = jsonEncode({
-        "content": _messageController.text,
-        "sentById": userId,
-        "receivedById": widget.otherUserId,
+    if (token == null || userId == null) {
+      setState(() {
+        isAuthenticated = false;
       });
+      return;
+    }
 
-      final response = await http.post(
-        Uri.parse('${Config.API_URL}/api/v1/messages'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-        body: messageData,
-      );
+    final messageContent = messageController.text;
+    if (messageContent.isEmpty) return;
 
-      if (response.statusCode == 201) {
-        print('Message sent successfully');
-        _messageController.clear();
-        fetchConversation();
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      } else {
-        print('Error sending message: ${response.body}');
-      }
+    final response = await http.post(
+      Uri.parse('${Config.API_URL}/api/v1/messages'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: json.encode({
+        'content': messageContent,
+        'sentById': userId,
+        'conversationId': widget.conversationId,
+      }),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      messageController.clear();
+      fetchMessages();
     } else {
-      print("Please make sure all fields are correctly filled.");
+      print('Erreur lors de l\'envoi du message: ${response.body}');
     }
   }
 
@@ -90,69 +94,38 @@ class _ConversationScreenState extends State<ConversationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Conversation'),
+        title: Text('Conversation'),
         backgroundColor: Colors.blueAccent,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: fetchConversation,
-          ),
-        ],
       ),
       body: Column(
         children: [
           Expanded(
             child: ListView.builder(
-              controller: _scrollController,
               itemCount: messages.length,
               itemBuilder: (context, index) {
-                final isMe = messages[index].sentById != widget.otherUserId;
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                  child: Align(
-                    alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: isMe ? Colors.blueAccent : Colors.grey[300],
-                        borderRadius: BorderRadius.circular(12.0),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(10.0),
-                        child: Text(
-                          messages[index].content,
-                          style: TextStyle(color: isMe ? Colors.white : Colors.black),
-                        ),
-                      ),
-                    ),
-                  ),
+                final message = messages[index];
+                return ListTile(
+                  title: Text(message.sentByName),
+                  subtitle: Text(message.content),
                 );
               },
             ),
           ),
-          Divider(height: 1),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Row(
               children: [
                 Expanded(
                   child: TextField(
-                    controller: _messageController,
+                    controller: messageController,
                     decoration: InputDecoration(
-                      hintText: "Type a message...",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.0),
-                      ),
-                      filled: true,
-                      fillColor: Colors.grey[200],
-                      contentPadding: const EdgeInsets.all(10.0),
+                      hintText: 'Tapez votre message...',
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
-                FloatingActionButton(
-                  backgroundColor: Theme.of(context).colorScheme.secondary,
+                IconButton(
+                  icon: Icon(Icons.send),
                   onPressed: sendMessage,
-                  child: const Icon(Icons.send, color: Colors.white),
                 ),
               ],
             ),
@@ -160,12 +133,5 @@ class _ConversationScreenState extends State<ConversationScreen> {
         ],
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _messageController.dispose();
-    _scrollController.dispose();
-    super.dispose();
   }
 }

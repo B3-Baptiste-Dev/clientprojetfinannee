@@ -73,6 +73,7 @@ class _AnnonceDetailPageState extends State<AnnonceDetailPage> {
                   'content': message,
                   'sentById': userId,
                   'receivedById': widget.annonce.ownerId,
+                  'annonceId': widget.annonce.id,  // Ajoutez cette ligne
                 });
 
                 final response = await http.post(

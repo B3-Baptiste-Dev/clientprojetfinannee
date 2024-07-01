@@ -1,4 +1,3 @@
-import 'package:client/config.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'dart:convert';
@@ -7,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import '../model/Annonce.dart';
 import 'annonce.detail_screen.dart';
+import '../config.dart';
 
 class ListeScreen extends StatefulWidget {
   @override
@@ -15,11 +15,24 @@ class ListeScreen extends StatefulWidget {
 
 class _ListeScreenState extends State<ListeScreen> {
   late Future<List<Annonce>> futureAnnonces;
+  double maxDistance = 100;
 
   @override
   void initState() {
     super.initState();
-    futureAnnonces = fetchAnnonces();
+    _fetchAndSetAnnonces();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _fetchAndSetAnnonces();
+  }
+
+  Future<void> _fetchAndSetAnnonces() async {
+    setState(() {
+      futureAnnonces = fetchAnnonces();
+    });
   }
 
   Future<Position> _determinePosition() async {
@@ -49,7 +62,6 @@ class _ListeScreenState extends State<ListeScreen> {
 
   Future<List<Annonce>> fetchAnnonces() async {
     final prefs = await SharedPreferences.getInstance();
-    final maxDistance = prefs.getDouble('annonceDistance') ?? 100;
     final userId = prefs.getInt('userId');
     final position = await _determinePosition();
     final token = prefs.getString('jwtToken');
@@ -64,8 +76,7 @@ class _ListeScreenState extends State<ListeScreen> {
       );
     } else {
       response = await http.get(
-        Uri.parse(
-            '${Config.API_URL}/api/v1/annonces/with-objects?userId=$userId'),
+        Uri.parse('${Config.API_URL}/api/v1/annonces/excludeUserId?excludeUserId=$userId'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -88,13 +99,57 @@ class _ListeScreenState extends State<ListeScreen> {
     }
   }
 
+  void _showFilterDialog() {
+    double tempDistance = maxDistance;
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Filtrer par distance'),
+          content: StatefulBuilder(
+            builder: (BuildContext context, StateSetter setState) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('Distance maximale (km): ${tempDistance.toInt()}'),
+                  Slider(
+                    value: tempDistance,
+                    min: 1,
+                    max: 100,
+                    divisions: 99,
+                    label: tempDistance.round().toString(),
+                    onChanged: (value) {
+                      setState(() {
+                        tempDistance = value;
+                      });
+                    },
+                  ),
+                ],
+              );
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  maxDistance = tempDistance;
+                  _fetchAndSetAnnonces();
+                });
+                Navigator.of(context).pop();
+              },
+              child: Text('Appliquer'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final bool isLargeScreen = MediaQuery.of(context).size.width > 800;
     return Scaffold(
-      appBar: isLargeScreen
-          ? null
-          : AppBar(
+      appBar: isLargeScreen ? null : AppBar(
         title: Text('Liste des annonces'),
         backgroundColor: Config.lightBlue,
       ),
@@ -197,6 +252,11 @@ class _ListeScreenState extends State<ListeScreen> {
             );
           }
         },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showFilterDialog,
+        child: Icon(Icons.filter_list),
+        backgroundColor: Config.lightBlue,
       ),
     );
   }

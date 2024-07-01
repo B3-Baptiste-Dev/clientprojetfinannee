@@ -22,10 +22,17 @@ class _AddAnnonceScreenState extends State<AddAnnonceScreen> {
   SharedPreferences? prefs;
   String? token;
   bool isAuthenticated = true;
+  List<Map<String, dynamic>> _categories = [];
+
   @override
   void initState() {
     super.initState();
     _loadSharedPreferences();
+    _fetchCategories().then((categories) {
+      setState(() {
+        _categories = categories;
+      });
+    });
   }
 
   Future<void> _loadSharedPreferences() async {
@@ -37,6 +44,17 @@ class _AddAnnonceScreenState extends State<AddAnnonceScreen> {
       setState(() {
         isAuthenticated = false;
       });
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> _fetchCategories() async {
+    final response = await http.get(Uri.parse('${Config.API_URL}/api/v1/categories'));
+
+    if (response.statusCode == 200) {
+      List<Map<String, dynamic>> categories = List<Map<String, dynamic>>.from(json.decode(response.body));
+      return categories;
+    } else {
+      throw Exception('Failed to load categories');
     }
   }
 
@@ -91,6 +109,12 @@ class _AddAnnonceScreenState extends State<AddAnnonceScreen> {
         backgroundColor: Colors.green,
         textColor: Colors.white,
       );
+      setState(() {
+        _titleController.clear();
+        _descriptionController.clear();
+        _categoryIdController.clear();
+        _image = null;
+      });
     } else {
       final responseBody = await response.stream.bytesToString();
       Fluttertoast.showToast(
@@ -102,6 +126,7 @@ class _AddAnnonceScreenState extends State<AddAnnonceScreen> {
       );
     }
   }
+
 
   Future<Position> _determinePosition() async {
     bool serviceEnabled;
@@ -148,7 +173,8 @@ class _AddAnnonceScreenState extends State<AddAnnonceScreen> {
       ),
       body: isAuthenticated
           ? buildView()
-          : buildNotAuthenticatedMessage(),    );
+          : buildNotAuthenticatedMessage(),
+    );
   }
 
   Widget buildView() {
@@ -161,7 +187,7 @@ class _AddAnnonceScreenState extends State<AddAnnonceScreen> {
           const SizedBox(height: 16),
           _buildTextField('Description', _descriptionController, maxLines: 4),
           const SizedBox(height: 16),
-          _buildTextField('ID Catégorie', _categoryIdController, keyboardType: TextInputType.number),
+          _buildCategoryDropdown(),
           const SizedBox(height: 16),
           _image != null
               ? Image.file(_image!)
@@ -208,6 +234,38 @@ class _AddAnnonceScreenState extends State<AddAnnonceScreen> {
     );
   }
 
+  Widget _buildCategoryDropdown() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Catégorie',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: 8),
+        DropdownButtonFormField<int>(
+          value: _categoryIdController.text.isNotEmpty ? int.tryParse(_categoryIdController.text) : null,
+          items: _categories.map((category) {
+            return DropdownMenuItem<int>(
+              value: category['id'],
+              child: Text(category['name']),
+            );
+          }).toList(),
+          onChanged: (value) {
+            setState(() {
+              _categoryIdController.text = value.toString();
+            });
+          },
+          decoration: InputDecoration(
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildTextField(String label, TextEditingController controller, {int maxLines = 1, TextInputType keyboardType = TextInputType.text}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -232,5 +290,3 @@ class _AddAnnonceScreenState extends State<AddAnnonceScreen> {
     );
   }
 }
-
-

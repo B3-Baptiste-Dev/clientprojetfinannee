@@ -1,5 +1,4 @@
 import 'package:client/config.dart';
-import 'package:client/views/parametre_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -50,13 +49,16 @@ class _CompteScreenState extends State<CompteScreen> {
   Future<void> _logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('jwtToken');
+    await prefs.remove('userId');
     setState(() {
       isLoggedIn = false;
       firstName = '';
       lastName = '';
     });
-    Navigator.pushReplacementNamed(context, '/login');
+    // Relancer l'application
+    Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -121,24 +123,6 @@ class _CompteScreenState extends State<CompteScreen> {
                   ),
                 ),
                 SizedBox(height: 10),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => SettingsPage()),
-                    );
-                  },
-                  icon: Icon(Icons.settings),
-                  label: const Text("Paramètres"),
-                  style: ElevatedButton.styleFrom(
-                    foregroundColor: Config.white,
-                    backgroundColor: Config.lightBlue,
-                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                    ),
-                  ),
-                ),
               ] else ...[
                 ElevatedButton(
                   onPressed: () => Navigator.pushNamed(context, '/login'),
